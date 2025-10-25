@@ -1,13 +1,13 @@
 package program
 
 import (
-	"encoding/csv"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/woodysmith1912/fetlife-data-tools/fetlife"
 	"github.com/woodysmith1912/fetlife-data-tools/obsidian"
 )
 
@@ -15,20 +15,6 @@ type SyncCmd struct {
 	DataDir         string   `help:"Path to data directory containing blockeds.txt and private_notes.txt" env:"DATA_DIR" type:"existingdir" required:"true"`
 	CreatePeopleIn  []string `alias:"in" help:"List of Obsidian folders to create individual people.  Syntax is folder[:keyword1,...] and this folder will be used if one of the keywords is found in the private note.  Keywords are not case sensitive" default:"People"`
 	CreateBlockedIn string   `help:"Obsidian folder to create blocked people in" default:"Bad People"`
-}
-
-type BlockedRecord struct {
-	UserID    string
-	CreatedAt string
-	UpdatedAt string
-	Nickname  string
-}
-
-type PrivateNoteRecord struct {
-	MemberID    string
-	CreatedAt   string
-	UpdatedAt   string
-	PrivateNote string
 }
 
 func (sync *SyncCmd) Run(options *Options) error {
@@ -47,7 +33,7 @@ func (sync *SyncCmd) Run(options *Options) error {
 	log.Info().Int("pageCount", len(vault.Pages)).Msg("Loaded vault")
 
 	// Read blockeds.txt
-	blockeds, err := sync.readBlockeds()
+	blockeds, err := fetlife.ReadBlockeds(sync.DataDir)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to read blockeds.txt")
 		return err
@@ -55,7 +41,7 @@ func (sync *SyncCmd) Run(options *Options) error {
 	log.Info().Int("blockedCount", len(blockeds)).Msg("Loaded blockeds")
 
 	// Read private_notes.txt
-	privateNotes, err := sync.readPrivateNotes()
+	privateNotes, err := fetlife.ReadPrivateNotes(sync.DataDir)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to read private_notes.txt")
 		return err
@@ -82,75 +68,6 @@ func (sync *SyncCmd) Run(options *Options) error {
 	return nil
 }
 
-func (sync *SyncCmd) readBlockeds() ([]BlockedRecord, error) {
-	path := filepath.Join(sync.DataDir, "blockeds.txt")
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var blockeds []BlockedRecord
-	for i, record := range records {
-		if i == 0 {
-			// Skip header
-			continue
-		}
-		if len(record) < 4 {
-			log.Warn().Int("line", i+1).Msg("Skipping invalid blocked record")
-			continue
-		}
-		blockeds = append(blockeds, BlockedRecord{
-			UserID:    record[0],
-			CreatedAt: record[1],
-			UpdatedAt: record[2],
-			Nickname:  record[3],
-		})
-	}
-
-	return blockeds, nil
-}
-
-func (sync *SyncCmd) readPrivateNotes() ([]PrivateNoteRecord, error) {
-	path := filepath.Join(sync.DataDir, "private_notes.txt")
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var notes []PrivateNoteRecord
-	for i, record := range records {
-		if i == 0 {
-			// Skip header
-			continue
-		}
-		if len(record) < 4 {
-			log.Warn().Int("line", i+1).Msg("Skipping invalid private note record")
-			continue
-		}
-		notes = append(notes, PrivateNoteRecord{
-			MemberID:    record[0],
-			CreatedAt:   record[1],
-			UpdatedAt:   record[2],
-			PrivateNote: record[3],
-		})
-	}
-
-	return notes, nil
-}
 
 // findPageByUserID finds a page by matching the user ID in the URL or URL aliases
 func (sync *SyncCmd) findPageByUserID(vault *obsidian.Vault, userID string) ([]*obsidian.Page, error) {
@@ -175,7 +92,7 @@ func (sync *SyncCmd) findPageByUserID(vault *obsidian.Vault, userID string) ([]*
 	return matches, nil
 }
 
-func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked BlockedRecord, options *Options) error {
+func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked fetlife.BlockedRecord, options *Options) error {
 	pages, err := sync.findPageByUserID(vault, blocked.UserID)
 	if err != nil {
 		return err
@@ -241,7 +158,7 @@ func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked BlockedRecord
 	return nil
 }
 
-func (sync *SyncCmd) processPrivateNote(vault *obsidian.Vault, note PrivateNoteRecord, options *Options) error {
+func (sync *SyncCmd) processPrivateNote(vault *obsidian.Vault, note fetlife.PrivateNoteRecord, options *Options) error {
 	pages, err := sync.findPageByUserID(vault, note.MemberID)
 	if err != nil {
 		return err
