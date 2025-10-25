@@ -42,13 +42,15 @@ jobs:
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v5
       with:
-        name: artifacts
-        path: dist
+        name: ${{steps.repo-name.outputs.name}}-${{matrix.GOOS}}-${{matrix.GOARCH}}
+        path: dist/${{steps.repo-name.outputs.name}}-${{matrix.GOOS}}-${{matrix.GOARCH}}.zip
         retention-days: 1
         if-no-files-found: error
 
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs:
       - build
       - docker-build
@@ -56,8 +58,17 @@ jobs:
     - uses: actions/checkout@v5
       with:
         fetch-depth: 0
+
+    - name: Repo Name
+      id: repo-name
+      run: echo name=$(basename ${{github.repository}}) >> $GITHUB_OUTPUT
+
     - name: Download Artifacts
       uses: actions/download-artifact@v6
+      with:
+        path: artifacts
+        pattern: ${{steps.repo-name.outputs.name}}-*
+        merge-multiple: true
 
     - name: Install ChangeLog generator
       run: |
