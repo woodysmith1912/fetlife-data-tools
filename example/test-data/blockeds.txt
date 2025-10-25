@@ -1,0 +1,4 @@
+blocked_user_id,created_at,updated_at,blocked_nickname
+98765,2023-02-15 14:22:10 UTC,2023-02-15 14:22:10 UTC,Frank
+87654,2023-03-20 18:45:33 UTC,2023-03-20 18:45:33 UTC,George
+555123,2024-05-10 09:15:42 UTC,2024-05-10 09:15:42 UTC,CreepyStranger

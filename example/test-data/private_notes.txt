@@ -1,0 +1,4 @@
+member_id,created_at,updated_at,private_note
+12345,2024-01-15 10:30:00 UTC,2024-01-15 10:30:00 UTC,Great photographer! Met at hiking event. Very friendly and professional.
+23456,2024-02-20 14:45:22 UTC,2024-03-10 16:20:15 UTC,Software engineer colleague. Good conversation about tech. Enjoys rock climbing - should invite to group climb!
+789456,2024-06-18 11:22:33 UTC,2024-06-18 11:22:33 UTC,Met at community event. Seemed nice but haven't interacted much yet. Follow up later.
