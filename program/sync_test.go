@@ -242,11 +242,7 @@ url: https://fetlife.com/users/
 				CreatePeopleIn: tt.createPeopleIn,
 			}
 
-			options := &Options{
-				Vault: tempVault,
-			}
-
-			page, err := sync.createPageFromTemplateWithNote(vault, tt.userID, tt.nickname, tt.privateNote, options)
+			page, err := sync.createPageFromTemplateWithNote(vault, tt.userID, tt.nickname, tt.privateNote)
 			assert.NoError(t, err)
 			assert.NotNil(t, page)
 
@@ -296,12 +292,8 @@ url: https://fetlife.com/users/
 		CreatePeopleIn: []string{"People"},
 	}
 
-	options := &Options{
-		Vault: tempVault,
-	}
-
 	// Test creating a page with nickname
-	page, err := sync.createPageFromTemplate(vault, "12345", "TestUser", options)
+	page, err := sync.createPageFromTemplate(vault, "12345", "TestUser")
 	assert.NoError(t, err)
 	assert.NotNil(t, page)
 	assert.Equal(t, "TestUser", page.Title)
@@ -324,12 +316,8 @@ func TestCreatePageFromTemplateWithNote_NoTemplate(t *testing.T) {
 		CreatePeopleIn: []string{"People"},
 	}
 
-	options := &Options{
-		Vault: tempVault,
-	}
-
 	// Should still work with default template
-	page, err := sync.createPageFromTemplateWithNote(vault, "12345", "TestUser", "", options)
+	page, err := sync.createPageFromTemplateWithNote(vault, "12345", "TestUser", "")
 	assert.NoError(t, err)
 	assert.NotNil(t, page)
 	assert.Equal(t, "TestUser", page.Title)
@@ -400,11 +388,11 @@ url: https://fetlife.com/users/
 		CreatePeopleIn: []string{"People", "Bad People:creepy,stalker,harassing", "Friends:cool,friend"},
 	}
 
-	options := &Options{
-		Vault: tempVault,
-	}
+	vault := obsidian.NewVault(tempVault)
+	err := vault.Load()
+	assert.NoError(t, err)
 
-	err := sync.Run(options)
+	err = sync.Run(vault)
 	assert.NoError(t, err)
 
 	// Verify files were created in correct folders
@@ -489,11 +477,11 @@ url: https://fetlife.com/users/
 		CreateBlockedIn: "Bad People",
 	}
 
-	options := &Options{
-		Vault: tempVault,
-	}
+	vault := obsidian.NewVault(tempVault)
+	err := vault.Load()
+	assert.NoError(t, err)
 
-	err := sync.Run(options)
+	err = sync.Run(vault)
 	assert.NoError(t, err)
 
 	// Both blocked users should be in Bad People folder (CreateBlockedIn setting)
@@ -569,11 +557,11 @@ url: https://fetlife.com/users/
 		CreatePeopleIn: []string{"People", "Bad People:creepy,harassment,blocked"},
 	}
 
-	options := &Options{
-		Vault: tempVault,
-	}
+	vault := obsidian.NewVault(tempVault)
+	err := vault.Load()
+	assert.NoError(t, err)
 
-	err := sync.Run(options)
+	err = sync.Run(vault)
 	assert.NoError(t, err)
 
 	// Both users should be in Bad People folder due to keyword matching

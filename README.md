@@ -1,6 +1,9 @@
 # FetLife Data Tools
 
-A command-line tool that syncs FetLife exported data (blocked users and private notes) into an Obsidian vault, automatically creating and updating markdown files with proper organization and metadata.
+A command-line tool for working with FetLife data exports. 
+
+Sync blocked users and private notes into an Obsidian vault with automatic organization, 
+or generate CSV/Excel spreadsheets for analysis and backup.
 
 ## Quick Start
 
@@ -10,7 +13,21 @@ A command-line tool that syncs FetLife exported data (blocked users and private 
 2. Extract the exported archive
 3. Locate the `blockeds.txt` and `private_notes.txt` CSV files
 
-### 2. Run the Sync
+### 2. Choose Your Workflow
+
+**Option A: Sync to Obsidian** (recommended for knowledge management)
+- Creates markdown files in your Obsidian vault
+- Supports keyword-based organization
+- Integrates with your existing notes and links
+
+**Option B: Generate Spreadsheet** (recommended for analysis/sharing)
+- Creates CSV or Excel files
+- Easy to sort, filter, and analyze
+- Portable format for sharing or backup
+
+### 3. Run the Tool
+
+#### For Obsidian Sync
 
 ```bash
 # Basic usage - sync to current directory
@@ -18,16 +35,23 @@ A command-line tool that syncs FetLife exported data (blocked users and private 
 
 # Specify a different vault location
 ./fetlife-data-tools --vault /path/to/vault obsidian sync --data-dir /path/to/fetlife/export
-
-# Or use environment variable
-VAULT_PATH=/path/to/vault ./fetlife-data-tools obsidian sync --data-dir /path/to/fetlife/export
 ```
 
-### 3. Check Your Vault
-
-The tool will create markdown files in your vault:
+**Result:** Markdown files created in your vault:
 - Blocked users → `Bad People/` folder (by default)
 - Users with private notes → `People/` folder (by default, or routed by keywords)
+
+#### For Spreadsheet Generation
+
+```bash
+# Generate CSV file
+./fetlife-data-tools spreadsheet generate --data-dir /path/to/fetlife/export
+
+# Generate Excel file
+./fetlife-data-tools spreadsheet generate --data-dir /path/to/fetlife/export --format xlsx
+```
+
+**Result:** A spreadsheet file (`fetlife-export.csv` or `fetlife-export.xlsx`) in the current directory containing all your blocked users and private notes in a tabular format.
 
 ## Installation
 
@@ -54,6 +78,9 @@ fetlife-data-tools obsidian sync --data-dir <path>
 # List people in vault
 fetlife-data-tools obsidian list
 
+# Generate spreadsheet from FetLife data
+fetlife-data-tools spreadsheet generate --data-dir <path>
+
 # Show version
 fetlife-data-tools version
 ```
@@ -72,6 +99,62 @@ fetlife-data-tools version
 - `--debug` - Enable debug logging
 - `--quiet` - Reduce log verbosity
 - `--output-format` - Output format: `auto`, `terminal`, or `jsonl`
+
+### Spreadsheet Generation
+
+Generate CSV or Excel spreadsheets from your FetLife data exports without syncing to an Obsidian vault.
+
+#### Basic Usage
+
+```bash
+# Generate CSV file (default)
+./fetlife-data-tools spreadsheet generate --data-dir /path/to/fetlife/export
+
+# Generate Excel file
+./fetlife-data-tools spreadsheet generate --data-dir /path/to/fetlife/export --format xlsx
+
+# Generate both CSV and Excel
+./fetlife-data-tools spreadsheet generate --data-dir /path/to/fetlife/export --format both
+```
+
+#### Options
+
+- `--data-dir` - (Required) Path to directory containing `blockeds.txt` and `private_notes.txt`
+- `--output-dir` - Directory for generated files (default: current directory)
+- `--basename` - Base name for output files without extension (default: `fetlife-export`)
+- `--format` - Output format: `csv`, `xlsx`, or `both` (default: `csv`)
+
+#### Examples
+
+```bash
+# Generate Excel file with custom name
+./fetlife-data-tools spreadsheet generate \
+  --data-dir ~/Downloads/fetlife-export \
+  --format xlsx \
+  --basename my-fetlife-data
+
+# Generate both formats in specific directory
+./fetlife-data-tools spreadsheet generate \
+  --data-dir ~/Downloads/fetlife-export \
+  --output-dir ~/Documents/Spreadsheets \
+  --format both \
+  --basename fetlife-2025
+```
+
+#### Output Format
+
+The generated spreadsheets include the following columns:
+
+- **User ID** - FetLife user ID
+- **Nickname** - User's nickname (from blocked list)
+- **URL** - Direct link to user's profile
+- **Blocked** - Whether the user is blocked (Yes/No)
+- **Blocked At** - When the user was blocked
+- **Private Note** - Your private note about the user
+- **Note Created** - When the note was created
+- **Note Updated** - When the note was last updated
+
+The data combines both blocked users and private notes, showing all information for each user in a single row.
 
 ### Advanced Usage
 
@@ -238,6 +321,26 @@ web-message: Private note content here
 
 # List people from specific vault
 ./fetlife-data-tools --vault ~/Documents/MyVault obsidian list
+```
+
+### Generate Spreadsheets
+
+```bash
+# Quick CSV export
+./fetlife-data-tools spreadsheet generate --data-dir ~/Downloads/fetlife-export
+
+# Generate Excel for better formatting
+./fetlife-data-tools spreadsheet generate \
+  --data-dir ~/Downloads/fetlife-export \
+  --format xlsx \
+  --basename my-fetlife-backup
+
+# Generate both formats for archiving
+./fetlife-data-tools spreadsheet generate \
+  --data-dir ~/Downloads/fetlife-export \
+  --output-dir ~/Backups/FetLife \
+  --format both \
+  --basename fetlife-backup-2025-01
 ```
 
 ## Project Structure

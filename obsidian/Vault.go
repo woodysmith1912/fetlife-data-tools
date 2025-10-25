@@ -240,3 +240,9 @@ func (vault *Vault) WithTag(tag string) []*Page {
 	}
 	return pages
 }
+
+// IsVaultPath checks if the given path is a valid Obsidian vault by looking for the .obsidian directory
+func IsVaultPath(vault string) bool {
+	info, err := os.Stat(filepath.Join(vault, ".obsidian"))
+	return err == nil && info.IsDir()
+}

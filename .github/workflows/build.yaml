@@ -49,9 +49,6 @@ jobs:
       - name: Build Image
         run: make image IMAGE=ghcr.io/${{env.REPO}}:${{ github.ref_name }}
 
-      - name: Push
-        run: docker push ghcr.io/${{env.REPO}}:${{ github.ref_name }}
-
   format:
     runs-on: ubuntu-latest
     steps:

@@ -14,12 +14,12 @@ import (
 
 // Options is the structure of program options
 type Options struct {
-	Vault        string      `help:"Path to vault" env:"VAULT_PATH" default:"." type:"existingdir"`
-	Debug        bool        `group:"Info" help:"Show debugging information"`
-	OutputFormat string      `group:"Info" enum:"auto,jsonl,terminal" default:"auto" help:"How to show program output (auto|terminal|jsonl)"`
-	Quiet        bool        `group:"Info" help:"Be less verbose than usual"`
-	Version      VersionCmd  `name:"version" cmd:"" help:"Show program version"`
-	Obsidian     ObsidianCmd `name:"obsidian" cmd:"" help:"Obsidian related commands"`
+	Debug        bool           `group:"Info" help:"Show debugging information"`
+	OutputFormat string         `group:"Info" enum:"auto,jsonl,terminal" default:"auto" help:"How to show program output (auto|terminal|jsonl)"`
+	Quiet        bool           `group:"Info" help:"Be less verbose than usual"`
+	Version      VersionCmd     `name:"version" cmd:"" help:"Show program version"`
+	Obsidian     ObsidianCmd    `name:"obsidian" cmd:"" help:"Obsidian related commands"`
+	Spreadsheet  SpreadsheetCmd `name:"spreadsheet" cmd:"" help:"Spreadsheet related commands"`
 }
 
 // Parse calls the CLI parsing routines

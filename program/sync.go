@@ -17,18 +17,11 @@ type SyncCmd struct {
 	CreateBlockedIn string   `help:"Obsidian folder to create blocked people in" default:"Bad People"`
 }
 
-func (sync *SyncCmd) Run(options *Options) error {
+func (sync *SyncCmd) Run(vault *obsidian.Vault) error {
 	log.Info().
-		Str("vault", options.Vault).
+		Str("vault", vault.Path).
 		Str("dataDir", sync.DataDir).
 		Msg("Starting sync")
-
-	// Load the vault
-	vault := obsidian.NewVault(options.Vault)
-	if err := vault.Load(); err != nil {
-		log.Error().Err(err).Msg("Failed to load vault")
-		return err
-	}
 
 	log.Info().Int("pageCount", len(vault.Pages)).Msg("Loaded vault")
 
@@ -50,7 +43,7 @@ func (sync *SyncCmd) Run(options *Options) error {
 
 	// Process blockeds
 	for _, blocked := range blockeds {
-		if err := sync.processBlocked(vault, blocked, options); err != nil {
+		if err := sync.processBlocked(vault, blocked); err != nil {
 			log.Error().Err(err).Str("userID", blocked.UserID).Msg("Failed to process blocked user")
 			// Continue processing other records
 		}
@@ -58,7 +51,7 @@ func (sync *SyncCmd) Run(options *Options) error {
 
 	// Process private notes
 	for _, note := range privateNotes {
-		if err := sync.processPrivateNote(vault, note, options); err != nil {
+		if err := sync.processPrivateNote(vault, note); err != nil {
 			log.Error().Err(err).Str("memberID", note.MemberID).Msg("Failed to process private note")
 			// Continue processing other records
 		}
@@ -91,7 +84,7 @@ func (sync *SyncCmd) findPageByUserID(vault *obsidian.Vault, userID string) ([]*
 	return matches, nil
 }
 
-func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked fetlife.BlockedRecord, options *Options) error {
+func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked fetlife.BlockedRecord) error {
 	pages, err := sync.findPageByUserID(vault, blocked.UserID)
 	if err != nil {
 		return err
@@ -114,7 +107,7 @@ func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked fetlife.Block
 			Str("folder", sync.CreateBlockedIn).
 			Msg("Creating new page for blocked user")
 
-		page, err = sync.createPageInFolder(vault, blocked.UserID, blocked.Nickname, sync.CreateBlockedIn, options)
+		page, err = sync.createPageInFolder(vault, blocked.UserID, blocked.Nickname, sync.CreateBlockedIn)
 		if err != nil {
 			return err
 		}
@@ -157,7 +150,7 @@ func (sync *SyncCmd) processBlocked(vault *obsidian.Vault, blocked fetlife.Block
 	return nil
 }
 
-func (sync *SyncCmd) processPrivateNote(vault *obsidian.Vault, note fetlife.PrivateNoteRecord, options *Options) error {
+func (sync *SyncCmd) processPrivateNote(vault *obsidian.Vault, note fetlife.PrivateNoteRecord) error {
 	pages, err := sync.findPageByUserID(vault, note.MemberID)
 	if err != nil {
 		return err
@@ -178,7 +171,7 @@ func (sync *SyncCmd) processPrivateNote(vault *obsidian.Vault, note fetlife.Priv
 			Str("memberID", note.MemberID).
 			Msg("Creating new page for member with private note")
 
-		page, err = sync.createPageFromTemplateWithNote(vault, note.MemberID, "", note.PrivateNote, options)
+		page, err = sync.createPageFromTemplateWithNote(vault, note.MemberID, "", note.PrivateNote)
 		if err != nil {
 			return err
 		}
@@ -261,14 +254,14 @@ func (sync *SyncCmd) determineFolderForUser(userID, privateNote string) string {
 }
 
 // createPageInFolder creates a page in a specific folder
-func (sync *SyncCmd) createPageInFolder(vault *obsidian.Vault, userID, nickname, folder string, options *Options) (*obsidian.Page, error) {
+func (sync *SyncCmd) createPageInFolder(vault *obsidian.Vault, userID, nickname, folder string) (*obsidian.Page, error) {
 	// Determine page name
 	pageName := nickname
 	if pageName == "" {
 		pageName = fmt.Sprintf("user-%s", userID)
 	}
 
-	folderPath := filepath.Join(options.Vault, folder)
+	folderPath := filepath.Join(vault.Path, folder)
 
 	// Create folder if it doesn't exist
 	if err := os.MkdirAll(folderPath, 0755); err != nil {
@@ -279,7 +272,7 @@ func (sync *SyncCmd) createPageInFolder(vault *obsidian.Vault, userID, nickname,
 	filePath := filepath.Join(folderPath, pageName+".md")
 
 	// Read template
-	templatePath := filepath.Join(options.Vault, "Templates", "People.md")
+	templatePath := filepath.Join(vault.Path, "Templates", "People.md")
 	templateContent, err := os.ReadFile(templatePath)
 	if err != nil {
 		log.Warn().Err(err).Msg("Template not found, using default")
@@ -306,7 +299,7 @@ url: https://fetlife.com/users/` + userID + `
 	}
 
 	// Load the newly created page
-	page, err := obsidian.LoadPage(filePath, options.Vault)
+	page, err := obsidian.LoadPage(filePath, vault.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -324,12 +317,12 @@ url: https://fetlife.com/users/` + userID + `
 }
 
 // createPageFromTemplateWithNote creates a page with private note for folder determination
-func (sync *SyncCmd) createPageFromTemplateWithNote(vault *obsidian.Vault, userID, nickname, privateNote string, options *Options) (*obsidian.Page, error) {
+func (sync *SyncCmd) createPageFromTemplateWithNote(vault *obsidian.Vault, userID, nickname, privateNote string) (*obsidian.Page, error) {
 	// Determine folder based on CreatePeopleIn flag and private note
 	folder := sync.determineFolderForUser(userID, privateNote)
-	return sync.createPageInFolder(vault, userID, nickname, folder, options)
+	return sync.createPageInFolder(vault, userID, nickname, folder)
 }
 
-func (sync *SyncCmd) createPageFromTemplate(vault *obsidian.Vault, userID, nickname string, options *Options) (*obsidian.Page, error) {
-	return sync.createPageFromTemplateWithNote(vault, userID, nickname, "", options)
+func (sync *SyncCmd) createPageFromTemplate(vault *obsidian.Vault, userID, nickname string) (*obsidian.Page, error) {
+	return sync.createPageFromTemplateWithNote(vault, userID, nickname, "")
 }

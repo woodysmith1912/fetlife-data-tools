@@ -38,7 +38,7 @@ func TestListCmd_Run(t *testing.T) {
 	var program Options
 
 	// Parse the list command with vault path
-	ctx, err := program.Parse([]string{"--vault", vaultPath, "obsidian", "list"})
+	ctx, err := program.Parse([]string{"obsidian", "--vault", vaultPath, "list"})
 	assert.NoError(t, err)
 
 	// Capture stdout
@@ -67,11 +67,14 @@ func TestListCmd_EmptyVault(t *testing.T) {
 	// Create a temporary empty vault
 	tempDir := t.TempDir()
 
-	var program Options
-	program.Vault = tempDir
+	// Create .obsidian directory to make it a valid vault
+	err := os.Mkdir(filepath.Join(tempDir, ".obsidian"), 0755)
+	assert.NoError(t, err)
 
-	// Parse the list command
-	ctx, err := program.Parse([]string{"obsidian", "list"})
+	var program Options
+
+	// Parse the list command with vault flag
+	ctx, err := program.Parse([]string{"obsidian", "--vault", tempDir, "list"})
 	assert.NoError(t, err)
 
 	// Run the command - should not error on empty vault
@@ -94,9 +97,9 @@ func TestListCmd_VaultPath(t *testing.T) {
 	var program Options
 
 	// Test setting vault path via command line flag
-	ctx, err := program.Parse([]string{"--vault", vaultPath, "obsidian", "list"})
+	ctx, err := program.Parse([]string{"obsidian", "--vault", vaultPath, "list"})
 	assert.NoError(t, err)
-	assert.Equal(t, vaultPath, program.Vault)
+	assert.Equal(t, vaultPath, program.Obsidian.Vault)
 
 	// Run should succeed
 	out := capturer.CaptureStdout(func() {
@@ -108,6 +111,13 @@ func TestListCmd_VaultPath(t *testing.T) {
 }
 
 func TestSyncCmd_Parse(t *testing.T) {
+	// Create a temporary vault for the test
+	tempVault := t.TempDir()
+
+	// Create .obsidian directory to make it a valid vault
+	err := os.Mkdir(filepath.Join(tempVault, ".obsidian"), 0755)
+	assert.NoError(t, err)
+
 	// Get the path to the example test-data
 	dataPath, err := filepath.Abs("../example/test-data")
 	if err != nil {
@@ -116,8 +126,8 @@ func TestSyncCmd_Parse(t *testing.T) {
 
 	var program Options
 
-	// Parse the sync command with required data-dir flag
-	ctx, err := program.Parse([]string{"obsidian", "sync", "--data-dir", dataPath})
+	// Parse the sync command with required data-dir flag and vault
+	ctx, err := program.Parse([]string{"obsidian", "--vault", tempVault, "sync", "--data-dir", dataPath})
 	assert.NoError(t, err)
 	assert.NotNil(t, ctx)
 
@@ -133,6 +143,11 @@ func TestSyncCmd_Run(t *testing.T) {
 	dataPath, err := filepath.Abs("../example/test-data")
 	if err != nil {
 		t.Fatalf("Failed to get data path: %v", err)
+	}
+
+	// Create .obsidian directory to make it a valid vault
+	if err := os.Mkdir(filepath.Join(tempVault, ".obsidian"), 0755); err != nil {
+		t.Fatalf("Failed to create .obsidian directory: %v", err)
 	}
 
 	// Create Templates directory with People.md template
@@ -155,10 +170,9 @@ url: https://fetlife.com/users/
 	}
 
 	var program Options
-	program.Vault = tempVault
 
 	// Parse the sync command
-	ctx, err := program.Parse([]string{"--vault", tempVault, "obsidian", "sync", "--data-dir", dataPath})
+	ctx, err := program.Parse([]string{"obsidian", "--vault", tempVault, "sync", "--data-dir", dataPath})
 	assert.NoError(t, err)
 
 	// Run the sync command - should not error
@@ -175,8 +189,8 @@ url: https://fetlife.com/users/
 func TestProgramDefaults(t *testing.T) {
 	var program Options
 
-	// Parse with a subcommand to test defaults
-	_, err := program.Parse([]string{"obsidian", "list"})
+	// Parse with a subcommand to test defaults (use version since it doesn't require a vault)
+	_, err := program.Parse([]string{"version"})
 	assert.NoError(t, err)
 
 	// Verify default output format is "auto"
@@ -190,8 +204,8 @@ func TestProgramDefaults(t *testing.T) {
 func TestProgramDebugFlag(t *testing.T) {
 	var program Options
 
-	// Parse with debug flag
-	_, err := program.Parse([]string{"--debug", "obsidian", "list"})
+	// Parse with debug flag (use version since it doesn't require a vault)
+	_, err := program.Parse([]string{"--debug", "version"})
 	assert.NoError(t, err)
 
 	assert.True(t, program.Debug)
@@ -200,8 +214,8 @@ func TestProgramDebugFlag(t *testing.T) {
 func TestProgramQuietFlag(t *testing.T) {
 	var program Options
 
-	// Parse with quiet flag
-	_, err := program.Parse([]string{"--quiet", "obsidian", "list"})
+	// Parse with quiet flag (use version since it doesn't require a vault)
+	_, err := program.Parse([]string{"--quiet", "version"})
 	assert.NoError(t, err)
 
 	assert.True(t, program.Quiet)
@@ -222,7 +236,8 @@ func TestProgramOutputFormat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var program Options
 
-			_, err := program.Parse([]string{"--output-format", tt.format, "obsidian", "list"})
+			// Use version command since it doesn't require a vault
+			_, err := program.Parse([]string{"--output-format", tt.format, "version"})
 
 			assert.NoError(t, err)
 			assert.Equal(t, tt.format, program.OutputFormat)

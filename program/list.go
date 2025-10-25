@@ -3,7 +3,6 @@ package program
 import (
 	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"github.com/woodysmith1912/fetlife-data-tools/obsidian"
 )
 
@@ -11,19 +10,7 @@ type ListCmd struct {
 	// Possible options for list command
 }
 
-func (list *ListCmd) Run(options *Options) error {
-
-	vault := obsidian.NewVault(options.Vault)
-
-	err := vault.Load()
-	if err != nil {
-		log.Error().Err(err).Msg("Error loading vault")
-		return err
-	}
-
-	log.Info().
-		Int("pageCount", len(vault.Pages)).
-		Msg("Loaded vault")
+func (list *ListCmd) Run(vault *obsidian.Vault) error {
 
 	// Print out all pages by title and URL
 	for _, person := range vault.InFolder("People") {
