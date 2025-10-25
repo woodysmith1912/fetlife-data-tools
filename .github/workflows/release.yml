@@ -86,6 +86,9 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     name: Build the docker image
+    permissions:
+        contents: read
+        packages: write
     steps:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
