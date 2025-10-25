@@ -68,7 +68,6 @@ func (sync *SyncCmd) Run(options *Options) error {
 	return nil
 }
 
-
 // findPageByUserID finds a page by matching the user ID in the URL or URL aliases
 func (sync *SyncCmd) findPageByUserID(vault *obsidian.Vault, userID string) ([]*obsidian.Page, error) {
 	var matches []*obsidian.Page

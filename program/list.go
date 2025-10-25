@@ -3,8 +3,8 @@ package program
 import (
 	"fmt"
 
-	"github.com/woodysmith1912/fetlife-data-tools/obsidian"
 	"github.com/rs/zerolog/log"
+	"github.com/woodysmith1912/fetlife-data-tools/obsidian"
 )
 
 type ListCmd struct {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/woodysmith1912/fetlife-data-tools/program"
 	"github.com/rs/zerolog/log"
+	"github.com/woodysmith1912/fetlife-data-tools/program"
 )
 
 func main() {
