@@ -179,7 +179,7 @@ func TestWriteCSV(t *testing.T) {
 
 	// Check second user
 	assert.Equal(t, "456", records[2][0])
-	assert.Equal(t, "", records[2][1]) // No nickname
+	assert.Equal(t, "", records[2][1])   // No nickname
 	assert.Equal(t, "No", records[2][3]) // Not blocked
 }
 

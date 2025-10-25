@@ -20,14 +20,14 @@ type GenerateCmd struct {
 
 // MergedUser represents combined data from blocked users and private notes
 type MergedUser struct {
-	UserID       string
-	Nickname     string
-	URL          string
-	Blocked      bool
-	BlockedAt    string
-	PrivateNote  string
-	NoteCreated  string
-	NoteUpdated  string
+	UserID      string
+	Nickname    string
+	URL         string
+	Blocked     bool
+	BlockedAt   string
+	PrivateNote string
+	NoteCreated string
+	NoteUpdated string
 }
 
 // Run generates CSV and XLSX spreadsheets from FetLife data
